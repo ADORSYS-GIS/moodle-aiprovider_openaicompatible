@@ -18,12 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Moodle 5.0 (main) with PHP 8.3 + PostgreSQL
+          # Moodle main with PHP 8.3 + PostgreSQL
           - moodle-branch: 'main'
             php: '8.3'
             db: 'pgsql'
-          # Moodle 5.0 (main) with PHP 8.2 + PostgreSQL (minimum supported PHP)
-          - moodle-branch: 'main'
+          # Moodle 4.5 with PHP 8.2 + PostgreSQL (minimum supported Moodle version)
+          - moodle-branch: 'MOODLE_405_STABLE'
             php: '8.2'
             db: 'pgsql'
 
