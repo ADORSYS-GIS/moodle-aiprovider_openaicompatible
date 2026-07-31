@@ -56,53 +56,48 @@ jobs:
           ini-values: max_input_vars=5000
           coverage: none
 
-      - name: Install moodle-plugin-ci
+      - name: Initialise moodle-plugin-ci
         run: |
-          composer global require moodlehq/moodle-plugin-ci:^4.5
-          echo "$(composer global config bin-dir --absolute)" >> $GITHUB_PATH
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo $(cd ci/bin; pwd) >> $GITHUB_PATH
+          echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
+          sudo locale-gen en_AU.UTF-8
+          echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
-      - name: Bootstrap Moodle environment
-        run: |
-          moodle-plugin-ci install \
-            --plugin plugin \
-            --db-type pgsql \
-            --db-host 127.0.0.1 \
-            --db-port 5432 \
-            --db-user moodle \
-            --db-pass moodle \
-            --db-name moodle \
-            --branch ${{ matrix.moodle-branch }}
+      - name: Install moodle-plugin-ci
+        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
-          DB: pgsql
+          DB: ${{ matrix.db }}
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
       - name: PHP Lint
-        if: always()
-        run: moodle-plugin-ci phplint plugin
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phplint
 
       - name: Moodle Code Checker
-        if: always()
-        run: moodle-plugin-ci codechecker plugin
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpcs --max-warnings 0
 
-      - name: PHPDoc Checker
-        if: always()
-        run: moodle-plugin-ci phpdoc plugin
+      - name: Moodle PHPDoc Checker
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpdoc --max-warnings 0
 
-      - name: Validate
-        if: always()
-        run: moodle-plugin-ci validate plugin
+      - name: Validating
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci validate
 
       - name: Check upgrade savepoints
-        if: always()
-        run: moodle-plugin-ci savepoints plugin
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci savepoints
 
       - name: Mustache Lint
-        if: always()
-        run: moodle-plugin-ci mustache plugin
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci mustache
 
       - name: Grunt (JS/CSS compilation check)
-        if: always()
-        run: moodle-plugin-ci grunt plugin
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci grunt --max-lint-warnings 0
 
-      - name: PHPUnit Tests
-        if: always()
-        run: moodle-plugin-ci phpunit --coverage-text plugin
+      - name: PHPUnit tests
+        if: ${{ !cancelled() }}
+        run: moodle-plugin-ci phpunit --fail-on-warning --coverage-text
