@@ -119,9 +119,9 @@ final class process_generate_image_test extends \advanced_testcase {
         $this->assertEquals('This is a test prompt', $requestdata->prompt);
         $this->assertEquals('gpt-image-1', $requestdata->model);
         $this->assertEquals('1', $requestdata->n);
-        // gpt-image-1 maps 'hd' quality to 'high'.
+        // Gpt-image-1 maps 'hd' quality to 'high'.
         $this->assertEquals('high', $requestdata->quality);
-        // gpt-image-1 does not send response_format.
+        // Gpt-image-1 does not send response_format.
         $this->assertObjectNotHasProperty('response_format', $requestdata);
         $this->assertEquals('1024x1024', $requestdata->size);
     }
