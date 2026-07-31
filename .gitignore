@@ -1,0 +1,6 @@
+# Local CI testing artefacts – never commit these
+Dockerfile
+docker-ci-entrypoint.sh
+
+# moodle-plugin-ci working directory (if run locally outside Docker)
+moodledata/
