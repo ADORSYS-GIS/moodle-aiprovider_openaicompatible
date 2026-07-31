@@ -28,7 +28,6 @@ use core_ai\hook\after_ai_provider_form_hook;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class hook_listener {
-
     /**
      * Hook listener for the Open AI instance setup form.
      *
@@ -51,9 +50,6 @@ class hook_listener {
         $mform->setType('apiendpoint', PARAM_URL);
         $mform->addHelpButton('apiendpoint', 'apiendpoint', 'aiprovider_openaicompatible');
         $mform->addRule('apiendpoint', get_string('required'), 'required', null, 'client');
-
-
-
         // Required setting to store OpenAI API key.
         $mform->addElement(
             'passwordunmask',
@@ -73,7 +69,6 @@ class hook_listener {
         );
         $mform->setType('orgid', PARAM_TEXT);
         $mform->addHelpButton('orgid', 'orgid', 'aiprovider_openaicompatible');
-
     }
 
     /**
@@ -81,7 +76,9 @@ class hook_listener {
      *
      * @param after_ai_action_settings_form_hook $hook The hook to add to config action settings.
      */
-    public static function set_model_form_definition_for_aiprovider_openaicompatible(after_ai_action_settings_form_hook $hook): void {
+    public static function set_model_form_definition_for_aiprovider_openaicompatible(
+        after_ai_action_settings_form_hook $hook
+    ): void {
         if ($hook->plugin !== 'aiprovider_openaicompatible') {
             return;
         }
@@ -104,7 +101,12 @@ class hook_listener {
                     ['rows' => 5, 'cols' => 20],
                 );
                 $mform->setType('modelextraparams', PARAM_TEXT);
-                $mform->addElement('static', 'modelextraparams_help', null, get_string('extraparams_help', 'aiprovider_openaicompatible'));
+                $mform->addElement(
+                    'static',
+                    'modelextraparams_help',
+                    null,
+                    get_string('extraparams_help', 'aiprovider_openaicompatible')
+                );
             } else {
                 $targetmodel = helper::get_model_class($model);
                 if ($targetmodel) {

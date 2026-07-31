@@ -52,7 +52,7 @@ abstract class abstract_processor extends process_base {
                 $endpoint .= '/chat/completions';
             }
         }
-        
+
         return new Uri($endpoint);
     }
 
@@ -66,7 +66,7 @@ abstract class abstract_processor extends process_base {
         if (!empty($this->provider->actionconfig[$this->action::class]['settings']['model'])) {
             $model = $this->provider->actionconfig[$this->action::class]['settings']['model'];
         }
-        
+
         return $model;
     }
 
@@ -78,7 +78,7 @@ abstract class abstract_processor extends process_base {
     protected function get_model_settings(): array {
         $settings = $this->provider->actionconfig[$this->action::class]['settings'];
         $model = $this->get_model();
-        
+
         // Extract extra params from the form structure if present.
         if (!empty($settings['modelsettings'][$model]['modelextraparams'])) {
             $params = json_decode($settings['modelsettings'][$model]['modelextraparams'], true);
@@ -148,7 +148,7 @@ abstract class abstract_processor extends process_base {
         $request = $this->provider->add_authentication_headers($request);
 
         $client = \core\di::get(http_client::class);
-        
+
         try {
             // Call the external AI service.
             $response = $client->send($request, [
@@ -161,6 +161,7 @@ abstract class abstract_processor extends process_base {
                 'success' => false,
                 'errorcode' => $e->getCode() ?: 500,
                 'errormessage' => $e->getMessage(),
+                'error' => $e->getMessage(),
             ];
         }
 
@@ -169,49 +170,36 @@ abstract class abstract_processor extends process_base {
         if ($status === 200) {
             return $this->handle_api_success($response);
         } else {
-            return $this->handle_api_error($response, $request);
+            return $this->handle_api_error($response);
         }
     }
 
     /**
      * Handle an error from the external AI api.
      *
+     * For 5xx responses the HTTP reason phrase is returned directly.
+     * For 4xx responses the error message is extracted from the JSON body
+     * (expected shape: {"error": {"message": "..."}}).
+     *
      * @param ResponseInterface $response The response object.
-     * @param RequestInterface|null $request The request object.
      * @return array The error response.
      */
-    protected function handle_api_error(ResponseInterface $response, ?RequestInterface $request = null): array {
+    protected function handle_api_error(ResponseInterface $response): array {
         $status = $response->getStatusCode();
-        $errormessage = 'API Error: ' . $response->getReasonPhrase() . ' (' . $status . ')';
-        
-        // Append URI if available for debugging
-        if ($request) {
-            $requesturi = (string) $request->getUri();
-            // If the request URI is absolute (starts with http), display it as is.
-            if (str_starts_with($requesturi, 'http')) {
-                $errormessage .= ' requesting ' . $requesturi;
-            } else {
-                // Otherwise prepend the endpoint.
-                $effectiveurl = (string) $this->get_endpoint();
-                if (substr($effectiveurl, -1) !== '/') {
-                    $effectiveurl .= '/';
-                }
-                $effectiveurl .= $requesturi;
-                $errormessage .= ' requesting ' . $effectiveurl;
-            }
-        }
 
         if ($status >= 500 && $status < 600) {
-            // Keep reason phrase for 5xx
+            // For server errors return the plain HTTP reason phrase.
+            $errormessage = $response->getReasonPhrase();
         } else {
+            // For client errors try to extract the provider error message from the body.
             $bodycontent = $response->getBody()->getContents();
             $bodyobj = json_decode($bodycontent);
             if ($bodyobj && isset($bodyobj->error) && isset($bodyobj->error->message)) {
-                $errormessage .= ' - ' . $bodyobj->error->message;
+                $errormessage = $bodyobj->error->message;
+            } else if (!empty($bodycontent)) {
+                $errormessage = strip_tags($bodycontent);
             } else {
-                if (!empty($bodycontent) && strlen($bodycontent) < 200) {
-                    $errormessage .= ' - ' . strip_tags($bodycontent);
-                }
+                $errormessage = $response->getReasonPhrase();
             }
         }
 
@@ -219,6 +207,7 @@ abstract class abstract_processor extends process_base {
             'success' => false,
             'errorcode' => (int) $status,
             'errormessage' => (string) $errormessage,
+            'error' => (string) $errormessage,
         ];
     }
 }
