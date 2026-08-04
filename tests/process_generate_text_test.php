@@ -148,17 +148,17 @@ final class process_generate_text_test extends \advanced_testcase {
             401 => new Response(
                 401,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'Invalid Authentication']]),
+                json_encode(['error' => ['message' => 'Invalid Authentication']])
             ),
             404 => new Response(
                 404,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'You must be a member of an organization to use the API']]),
+                json_encode(['error' => ['message' => 'You must be a member of an organization to use the API']])
             ),
             429 => new Response(
                 429,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'Rate limit reached for requests']]),
+                json_encode(['error' => ['message' => 'Rate limit reached for requests']])
             ),
         ];
 
@@ -173,6 +173,7 @@ final class process_generate_text_test extends \advanced_testcase {
             } else if ($status == 503) {
                 $this->assertEquals('API Error: Service Unavailable (503)', $result['errormessage']);
             } else {
+                $response->getBody()->rewind();
                 $bodycontent = $response->getBody()->getContents();
                 $bodyobj = json_decode($bodycontent);
                 $this->assertStringContainsString($bodyobj->error->message, $result['errormessage']);

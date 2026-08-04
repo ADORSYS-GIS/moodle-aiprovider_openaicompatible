@@ -176,6 +176,7 @@ final class process_summarise_text_test extends \advanced_testcase {
             } else if ($status == 503) {
                 $this->assertEquals('API Error: Service Unavailable (503)', $result['errormessage']);
             } else {
+                $response->getBody()->rewind();
                 $bodycontent = $response->getBody()->getContents();
                 $bodyobj = json_decode($bodycontent);
                 $this->assertStringContainsString($bodyobj->error->message, $result['errormessage']);
