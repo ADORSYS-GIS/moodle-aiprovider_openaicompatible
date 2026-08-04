@@ -74,7 +74,7 @@ trait testcase_helper_trait {
      *   - 'mock'   => the MockHandler (use ->append() to queue responses)
      *   - 'client' => the Guzzle Client configured with the mock handler
      *
-     * @param array|null &$history Optional history array to capture requests.
+     * @param array|null $history Optional history array to capture requests.
      * @return array{mock: MockHandler, client: Client}
      */
     public function get_plugin_mocked_http_client(?array &$history = null): array {

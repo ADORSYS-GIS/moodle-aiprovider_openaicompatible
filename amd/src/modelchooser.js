@@ -20,7 +20,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import { populateFields, clearFields } from 'core_ai/helper';
+import {populateFields, clearFields} from 'core_ai/helper';
 
 const Selectors = {
     fields: {
