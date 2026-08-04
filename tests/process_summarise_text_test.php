@@ -342,7 +342,7 @@ final class process_summarise_text_test extends \advanced_testcase {
         $this->assertFalse($result->get_success());
         $this->assertEquals('summarise_text', $result->get_actionname());
         $this->assertEquals(401, $result->get_errorcode());
-        $this->assertEquals('Invalid Authentication', $result->get_errormessage());
+        $this->assertEquals('API Error: Unauthorized (401): Invalid Authentication', $result->get_errormessage());
     }
 
     /**
