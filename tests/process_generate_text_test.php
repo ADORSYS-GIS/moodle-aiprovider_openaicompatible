@@ -169,11 +169,13 @@ final class process_generate_text_test extends \advanced_testcase {
             $result = $method->invoke($processor, $response);
             $this->assertEquals($status, $result['errorcode']);
             if ($status == 500) {
-                $this->assertEquals('Internal Server Error', $result['errormessage']);
+                $this->assertEquals('API Error: Internal Server Error (500)', $result['errormessage']);
             } else if ($status == 503) {
-                $this->assertEquals('Service Unavailable', $result['errormessage']);
+                $this->assertEquals('API Error: Service Unavailable (503)', $result['errormessage']);
             } else {
-                $this->assertStringContainsString($response->getBody()->getContents(), $result['errormessage']);
+                $bodycontent = $response->getBody()->getContents();
+                $bodyobj = json_decode($bodycontent);
+                $this->assertStringContainsString($bodyobj->error->message, $result['errormessage']);
             }
         }
     }
@@ -209,7 +211,7 @@ final class process_generate_text_test extends \advanced_testcase {
      */
     public function test_query_ai_api_success(): void {
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -296,7 +298,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->setUser($this->getDataGenerator()->create_user());
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -321,7 +323,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->setUser($this->getDataGenerator()->create_user());
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -374,7 +376,7 @@ final class process_generate_text_test extends \advanced_testcase {
         );
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // Case 1: User rate limit has not been reached.
         $this->create_action($user1->id);
@@ -471,7 +473,7 @@ final class process_generate_text_test extends \advanced_testcase {
         );
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // Case 1: Global rate limit has not been reached.
         $this->create_action($user1->id);

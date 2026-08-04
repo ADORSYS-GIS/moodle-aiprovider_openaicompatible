@@ -16,6 +16,10 @@
 
 namespace aiprovider_openaicompatible\test;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+
 /**
  * Trait for test cases.
  *
@@ -62,5 +66,25 @@ trait testcase_helper_trait {
         );
 
         return $provider;
+    }
+
+    /**
+     * Get a mocked HTTP client and inject it into the DI container.
+     *
+     * Returns an associative array with:
+     *   - 'mock'   => the MockHandler (use ->append() to queue responses)
+     *   - 'client' => the Guzzle Client configured with the mock handler
+     *
+     * @return array{mock: MockHandler, client: Client}
+     */
+    public function get_plugin_mocked_http_client(?array &$history = null): array {
+        $mock = new MockHandler();
+        $handlerstack = HandlerStack::create($mock);
+        $client = new \core\http_client(['handler' => $handlerstack]);
+
+        // Swap the http_client binding in the DI container so the plugin uses our mock.
+        \core\di::get(\DI\Container::class)->set(\core\http_client::class, $client);
+
+        return ['mock' => $mock, 'client' => $client];
     }
 }
