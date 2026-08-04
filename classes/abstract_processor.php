@@ -160,6 +160,7 @@ abstract class abstract_processor extends process_base {
             return [
                 'success' => false,
                 'errorcode' => $e->getCode() ?: 500,
+                'error' => $e->getMessage(),
                 'errormessage' => $e->getMessage(),
             ];
         }
@@ -216,6 +217,7 @@ abstract class abstract_processor extends process_base {
         return [
             'success' => false,
             'errorcode' => (int) $status,
+            'error' => (string) $errormessage,
             'errormessage' => (string) $errormessage,
         ];
     }
