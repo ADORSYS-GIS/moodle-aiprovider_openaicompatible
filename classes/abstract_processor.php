@@ -183,8 +183,8 @@ abstract class abstract_processor extends process_base {
     protected function handle_api_error(ResponseInterface $response, ?RequestInterface $request = null): array {
         $status = $response->getStatusCode();
         $errormessage = 'API Error: ' . $response->getReasonPhrase() . ' (' . $status . ')';
-        
-        // Append URI if available for debugging
+
+        // Append URI if available for debugging.
         if ($request) {
             $requesturi = (string) $request->getUri();
             // If the request URI is absolute (starts with http), display it as is.
@@ -201,9 +201,7 @@ abstract class abstract_processor extends process_base {
             }
         }
 
-        if ($status >= 500 && $status < 600) {
-            // Keep reason phrase for 5xx
-        } else {
+        if ($status < 500 || $status >= 600) {
             $bodycontent = $response->getBody()->getContents();
             $bodyobj = json_decode($bodycontent);
             if ($bodyobj && isset($bodyobj->error) && isset($bodyobj->error->message)) {
