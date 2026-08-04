@@ -1,2 +1,0 @@
-another_binary.png:
-diff_extract_changes_edge_cases.txt:10-10;13-13;
