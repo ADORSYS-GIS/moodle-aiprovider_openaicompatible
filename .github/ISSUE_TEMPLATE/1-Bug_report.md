@@ -10,8 +10,8 @@ labels: "bug"
 
 <!-- If the following boxes are not ALL checked, your issue is likely to be closed -->
 
-- [ ] Using an up-to-date [`main` branch](https://github.com/adorsys-gis/openstack/tree/main)
-- [ ] Using ansible
+- [ ] Using an up-to-date [`main` branch](https://github.com/ADORSYS-GIS/moodle-aiprovider_openaicompatible/tree/main)
+- [ ] Using a supported Moodle version
 
 ## Expected Behavior
 
@@ -48,6 +48,7 @@ labels: "bug"
 
 <!--- Include as many relevant details about the environment you experienced the bug in -->
 
-- ansible version :
+- Moodle version :
+- Plugin version :
 - Operating System and version :
 - Link to your project :
