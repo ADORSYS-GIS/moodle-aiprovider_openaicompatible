@@ -287,7 +287,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->assertFalse($result->get_success());
         $this->assertEquals('generate_text', $result->get_actionname());
         $this->assertEquals($response['errorcode'], $result->get_errorcode());
-        // response_base::get_error() only exists from Moodle 5.1 onwards.
+        // The get_error() method only exists from Moodle 5.1 onwards.
         if (method_exists($result, 'get_error')) {
             $this->assertEquals($response['error'], $result->get_error());
         }
