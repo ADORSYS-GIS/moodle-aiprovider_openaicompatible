@@ -7,6 +7,18 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    # Weekly, to catch upstream breakage on MOODLE_5xx_STABLE/main even
+    # when nothing has changed in this repo.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
