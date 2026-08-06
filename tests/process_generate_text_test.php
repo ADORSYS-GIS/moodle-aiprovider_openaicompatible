@@ -32,7 +32,6 @@ use GuzzleHttp\Psr7\Response;
  * @covers     \aiprovider_openaicompatible\abstract_processor
  */
 final class process_generate_text_test extends \advanced_testcase {
-
     use testcase_helper_trait;
 
     /** @var string A successful response in JSON format. */
@@ -54,7 +53,8 @@ final class process_generate_text_test extends \advanced_testcase {
         parent::setUp();
         $this->resetAfterTest();
         // Load a response body from a file.
-        $this->responsebodyjson = file_get_contents(self::get_fixture_path('aiprovider_openaicompatible', 'text_request_success.json'));
+        $fixturepath = self::get_fixture_path('aiprovider_openaicompatible', 'text_request_success.json');
+        $this->responsebodyjson = file_get_contents($fixturepath);
         $this->manager = \core\di::get(\core_ai\manager::class);
         $this->provider = $this->create_provider(
             actionclass: \core_ai\aiactions\generate_text::class,
@@ -148,17 +148,17 @@ final class process_generate_text_test extends \advanced_testcase {
             401 => new Response(
                 401,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'Invalid Authentication']]),
+                json_encode(['error' => ['message' => 'Invalid Authentication']])
             ),
             404 => new Response(
                 404,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'You must be a member of an organization to use the API']]),
+                json_encode(['error' => ['message' => 'You must be a member of an organization to use the API']])
             ),
             429 => new Response(
                 429,
                 ['Content-Type' => 'application/json'],
-                json_encode(['error' => ['message' => 'Rate limit reached for requests']]),
+                json_encode(['error' => ['message' => 'Rate limit reached for requests']])
             ),
         ];
 
@@ -169,11 +169,14 @@ final class process_generate_text_test extends \advanced_testcase {
             $result = $method->invoke($processor, $response);
             $this->assertEquals($status, $result['errorcode']);
             if ($status == 500) {
-                $this->assertEquals('Internal Server Error', $result['errormessage']);
+                $this->assertEquals('API Error: Internal Server Error (500)', $result['errormessage']);
             } else if ($status == 503) {
-                $this->assertEquals('Service Unavailable', $result['errormessage']);
+                $this->assertEquals('API Error: Service Unavailable (503)', $result['errormessage']);
             } else {
-                $this->assertStringContainsString($response->getBody()->getContents(), $result['errormessage']);
+                $response->getBody()->rewind();
+                $bodycontent = $response->getBody()->getContents();
+                $bodyobj = json_decode($bodycontent);
+                $this->assertStringContainsString($bodyobj->error->message, $result['errormessage']);
             }
         }
     }
@@ -209,7 +212,7 @@ final class process_generate_text_test extends \advanced_testcase {
      */
     public function test_query_ai_api_success(): void {
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -284,7 +287,10 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->assertFalse($result->get_success());
         $this->assertEquals('generate_text', $result->get_actionname());
         $this->assertEquals($response['errorcode'], $result->get_errorcode());
-        $this->assertEquals($response['error'], $result->get_error());
+        // The get_error() method only exists from Moodle 5.1 onwards.
+        if (method_exists($result, 'get_error')) {
+            $this->assertEquals($response['error'], $result->get_error());
+        }
         $this->assertEquals($response['errormessage'], $result->get_errormessage());
     }
 
@@ -296,7 +302,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->setUser($this->getDataGenerator()->create_user());
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -321,7 +327,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->setUser($this->getDataGenerator()->create_user());
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // The response from OpenAI.
         $mock->append(new Response(
@@ -337,7 +343,10 @@ final class process_generate_text_test extends \advanced_testcase {
         $this->assertFalse($result->get_success());
         $this->assertEquals('generate_text', $result->get_actionname());
         $this->assertEquals(401, $result->get_errorcode());
-        $this->assertEquals('Invalid Authentication', $result->get_errormessage());
+        $this->assertEquals(
+            'API Error: Unauthorized (401) requesting https://api.openai.com/v1/chat/completions/ - Invalid Authentication',
+            $result->get_errormessage()
+        );
     }
 
     /**
@@ -374,7 +383,7 @@ final class process_generate_text_test extends \advanced_testcase {
         );
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // Case 1: User rate limit has not been reached.
         $this->create_action($user1->id);
@@ -400,10 +409,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $processor = new process_generate_text($provider, $this->action);
         $result = $processor->process();
         $this->assertEquals(429, $result->get_errorcode());
-        $this->assertEquals(
-            expected: 'You have reached the maximum number of AI requests you can make in an hour. Try again later.',
-            actual: $result->get_errormessage(),
-        );
+        $this->assert_user_rate_limit_message($result->get_errormessage());
         $this->assertFalse($result->get_success());
 
         // Case 3: User rate limit has not been reached for a different user.
@@ -471,7 +477,7 @@ final class process_generate_text_test extends \advanced_testcase {
         );
 
         // Mock the http client to return a successful response.
-        ['mock' => $mock] = $this->get_mocked_http_client();
+        ['mock' => $mock] = $this->get_plugin_mocked_http_client();
 
         // Case 1: Global rate limit has not been reached.
         $this->create_action($user1->id);
@@ -497,10 +503,7 @@ final class process_generate_text_test extends \advanced_testcase {
         $processor = new process_generate_text($provider, $this->action);
         $result = $processor->process();
         $this->assertEquals(429, $result->get_errorcode());
-        $this->assertEquals(
-            expected: 'The AI service has reached the maximum number of site-wide requests per hour. Try again later.',
-            actual: $result->get_errormessage(),
-        );
+        $this->assert_global_rate_limit_message($result->get_errormessage());
         $this->assertFalse($result->get_success());
 
         // Case 3: Global rate limit has been reached for a different user too.

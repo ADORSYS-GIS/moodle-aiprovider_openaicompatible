@@ -16,6 +16,8 @@
 
 namespace aiprovider_openaicompatible;
 
+use aiprovider_openaicompatible\test\testcase_helper_trait;
+
 /**
  * Test OpenAI provider methods.
  *
@@ -25,6 +27,7 @@ namespace aiprovider_openaicompatible;
  * @covers     \aiprovider_openaicompatible\provider
  */
 final class provider_test extends \advanced_testcase {
+    use testcase_helper_trait;
 
     /** @var \core_ai\manager */
     private $manager;
@@ -113,10 +116,7 @@ final class provider_test extends \advanced_testcase {
         // The 4th request for the same user should be denied.
         $result = $provider->is_request_allowed($action);
         $this->assertFalse($result['success']);
-        $this->assertEquals(
-            'You have reached the maximum number of AI requests you can make in an hour. Try again later.',
-            $result['errormessage']
-        );
+        $this->assert_user_rate_limit_message($result['errormessage']);
 
         // Change user id to make a request for a different user, should pass (4 requests for global rate).
         $action = new \core_ai\aiactions\generate_image(
@@ -136,10 +136,7 @@ final class provider_test extends \advanced_testcase {
         // The 6th request should be denied.
         $result = $provider->is_request_allowed($action);
         $this->assertFalse($result['success']);
-        $this->assertEquals(
-            expected: 'The AI service has reached the maximum number of site-wide requests per hour. Try again later.',
-            actual: $result['errormessage'],
-        );
+        $this->assert_global_rate_limit_message($result['errormessage']);
     }
 
     /**

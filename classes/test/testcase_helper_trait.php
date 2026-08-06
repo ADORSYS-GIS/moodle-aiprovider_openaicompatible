@@ -16,6 +16,10 @@
 
 namespace aiprovider_openaicompatible\test;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+
 /**
  * Trait for test cases.
  *
@@ -24,7 +28,6 @@ namespace aiprovider_openaicompatible\test;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 trait testcase_helper_trait {
-
     /**
      * Create the provider object.
      *
@@ -62,5 +65,55 @@ trait testcase_helper_trait {
         );
 
         return $provider;
+    }
+
+    /**
+     * Get a mocked HTTP client and inject it into the DI container.
+     *
+     * Returns an associative array with:
+     *   - 'mock'   => the MockHandler (use ->append() to queue responses)
+     *   - 'client' => the Guzzle Client configured with the mock handler
+     *
+     * @param array|null $history Optional history array to capture requests.
+     * @return array{mock: MockHandler, client: Client}
+     */
+    public function get_plugin_mocked_http_client(?array &$history = null): array {
+        $mock = new MockHandler();
+        $handlerstack = HandlerStack::create($mock);
+        $client = new \core\http_client(['handler' => $handlerstack]);
+
+        // Swap the http_client binding in the DI container so the plugin uses our mock.
+        \core\di::get(\DI\Container::class)->set(\core\http_client::class, $client);
+
+        return ['mock' => $mock, 'client' => $client];
+    }
+
+    /**
+     * Assert a per-user rate limit error message.
+     *
+     * Moodle 5.0 does not have the core_ai\error classes and reports rate
+     * limit breaches with a generic message; Moodle 5.1+ reports a friendlier,
+     * localised one. Accept either so this passes across all supported versions.
+     *
+     * @param string $actual The error message returned by the plugin.
+     */
+    public function assert_user_rate_limit_message(string $actual): void {
+        $this->assertContains($actual, [
+            'You have reached the maximum number of AI requests you can make in an hour. Try again later.',
+            'User rate limit exceeded',
+        ]);
+    }
+
+    /**
+     * Assert a site-wide (global) rate limit error message.
+     *
+     * @param string $actual The error message returned by the plugin.
+     * @see assert_user_rate_limit_message() for why two variants are accepted.
+     */
+    public function assert_global_rate_limit_message(string $actual): void {
+        $this->assertContains($actual, [
+            'The AI service has reached the maximum number of site-wide requests per hour. Try again later.',
+            'Global rate limit exceeded',
+        ]);
     }
 }

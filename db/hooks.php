@@ -27,11 +27,13 @@ defined('MOODLE_INTERNAL') || die();
 $callbacks = [
     [
         'hook' => \core_ai\hook\after_ai_provider_form_hook::class,
-        'callback' => \aiprovider_openaicompatible\hook_listener::class . '::set_form_definition_for_aiprovider_openaicompatible',
+        'callback' => \aiprovider_openaicompatible\hook_listener::class .
+            '::set_form_definition_for_aiprovider_openaicompatible',
     ],
 
     [
         'hook' => \core_ai\hook\after_ai_action_settings_form_hook::class,
-        'callback' => \aiprovider_openaicompatible\hook_listener::class . '::set_model_form_definition_for_aiprovider_openaicompatible',
+        'callback' => \aiprovider_openaicompatible\hook_listener::class .
+            '::set_model_form_definition_for_aiprovider_openaicompatible',
     ],
 ];
