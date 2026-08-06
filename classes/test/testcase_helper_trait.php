@@ -87,4 +87,33 @@ trait testcase_helper_trait {
 
         return ['mock' => $mock, 'client' => $client];
     }
+
+    /**
+     * Assert a per-user rate limit error message.
+     *
+     * Moodle 5.0 does not have the core_ai\error classes and reports rate
+     * limit breaches with a generic message; Moodle 5.1+ reports a friendlier,
+     * localised one. Accept either so this passes across all supported versions.
+     *
+     * @param string $actual The error message returned by the plugin.
+     */
+    public function assert_user_rate_limit_message(string $actual): void {
+        $this->assertContains($actual, [
+            'You have reached the maximum number of AI requests you can make in an hour. Try again later.',
+            'User rate limit exceeded',
+        ]);
+    }
+
+    /**
+     * Assert a site-wide (global) rate limit error message.
+     *
+     * @param string $actual The error message returned by the plugin.
+     * @see assert_user_rate_limit_message() for why two variants are accepted.
+     */
+    public function assert_global_rate_limit_message(string $actual): void {
+        $this->assertContains($actual, [
+            'The AI service has reached the maximum number of site-wide requests per hour. Try again later.',
+            'Global rate limit exceeded',
+        ]);
+    }
 }
