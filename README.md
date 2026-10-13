@@ -2,6 +2,8 @@
 
 This plugin enables Moodle to connect with any AI service that adheres to the OpenAI API specification, such as LocalAI, vLLM, corporate AI gateways, or the official OpenAI API itself.
 
+Available on the [Moodle Plugins directory](https://marketplace.moodle.com/plugins/3494).
+
 ## Features
 
 - **Universal Compatibility**: Connect to any custom API endpoint (e.g., `https://my-ai.com/api/v1`).
