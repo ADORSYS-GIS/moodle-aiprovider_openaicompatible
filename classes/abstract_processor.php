@@ -17,6 +17,7 @@
 namespace aiprovider_openaicompatible;
 
 use core\http_client;
+use core_ai\error\factory;
 use core_ai\process_base;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Uri;
@@ -157,12 +158,7 @@ abstract class abstract_processor extends process_base {
             ]);
         } catch (RequestException $e) {
             // Handle any exceptions.
-            return [
-                'success' => false,
-                'errorcode' => $e->getCode() ?: 500,
-                'error' => $e->getMessage(),
-                'errormessage' => $e->getMessage(),
-            ];
+            return factory::create($e->getCode() ?: 500, $e->getMessage())->get_error_details();
         }
 
         // Double-check the response codes, in case of a non 200 that didn't throw an error.
@@ -214,11 +210,6 @@ abstract class abstract_processor extends process_base {
             }
         }
 
-        return [
-            'success' => false,
-            'errorcode' => (int) $status,
-            'error' => (string) $errormessage,
-            'errormessage' => (string) $errormessage,
-        ];
+        return factory::create($status, (string) $errormessage)->get_error_details();
     }
 }
