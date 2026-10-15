@@ -41,7 +41,7 @@ labels: "bug"
 ## Context
 
 <!--- How has this issue affected you? What are you trying to accomplish? -->
-<!--- Did you make any changes to the boilerplate after cloning it? -->
+<!--- Did you make any changes to the plugin after installing it? -->
 <!--- Providing context helps us come up with a solution that is most useful in the real world -->
 
 ## Your Environment
